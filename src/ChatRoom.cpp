@@ -15,6 +15,7 @@ void ChatRoom::join(const std::shared_ptr<ChatParticipant> &participant) {
         auto host_json = json();
         host_json["type"] = Host;
         participant->deliver(NetworkMessage(host_json.dump()));
+        participant->is_host = true;
     }
 
     auto allocation_json = json();
@@ -50,11 +51,14 @@ void ChatRoom::join(const std::shared_ptr<ChatParticipant> &participant) {
 void ChatRoom::leave(const std::shared_ptr<ChatParticipant> &participant) {
     participants.erase(participant);
 
-    for (const auto &p: participants) {
-        auto host_json = json();
-        host_json["type"] = Host;
-        p->deliver(NetworkMessage(host_json.dump()));
-        break;
+    if (participant->is_host) {
+        for (const auto &p: participants) {
+            auto host_json = json();
+            host_json["type"] = Host;
+            p->deliver(NetworkMessage(host_json.dump()));
+            p->is_host = true;
+            break;
+        }
     }
 
     auto leave_json = json();
@@ -63,6 +67,18 @@ void ChatRoom::leave(const std::shared_ptr<ChatParticipant> &participant) {
     const auto join_message = NetworkMessage(leave_json.dump());
     for (const auto &p: participants)
         p->deliver(join_message);
+
+    auto users_json = json();
+    users_json["type"] = Users;
+    auto user_ids = std::list<int>();
+
+    for (const auto &item: participants) {
+        user_ids.push_back(item->user_id);
+    }
+
+    users_json["user_ids"] = user_ids;
+
+    deliver(NetworkMessage(users_json.dump()));
 }
 
 void ChatRoom::deliver(const NetworkMessage &msg) {
