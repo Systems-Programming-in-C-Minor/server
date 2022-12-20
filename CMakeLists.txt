@@ -19,7 +19,12 @@ FetchContent_Declare(
         BUILD_COMMAND ""
 )
 
-FetchContent_MakeAvailable(asio)
+FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+)
+
+FetchContent_MakeAvailable(asio nlohmann_json)
 
 add_library(asio INTERFACE)
 target_include_directories(asio INTERFACE ${asio_SOURCE_DIR}/asio/include)
@@ -29,4 +34,5 @@ file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS ./src/*.cpp)
 add_executable(unserver ${SOURCE_FILES})
 target_link_libraries(unserver PRIVATE
         asio
+        nlohmann_json::nlohmann_json
         )
