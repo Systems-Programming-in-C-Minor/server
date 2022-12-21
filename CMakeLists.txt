@@ -36,3 +36,10 @@ target_link_libraries(unserver PRIVATE
         asio
         nlohmann_json::nlohmann_json
         )
+
+if (WIN32)
+    target_link_libraries(unserver PRIVATE
+            ws2_32
+            wsock32
+            )
+endif ()
